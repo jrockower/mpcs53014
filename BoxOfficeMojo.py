@@ -1,4 +1,5 @@
 import requests
+import re
 from bs4 import BeautifulSoup
 
 def get_lifetime():
@@ -16,12 +17,24 @@ def get_lifetime():
         resp = requests.get(page)
         soup = BeautifulSoup(resp.text, 'lxml')
         # https://github.com/eliasdabbas/word_frequency/blob/master/data_scraping/boxoffice.py
-        table_data = [x.text for x in soup.select('tr td')]
+        table_data = []
+        for x in soup.select('tr td'):
+            try:
+                # Try to extract the IMDb ID
+                link = x.findAll('a')[0].get('href')
+                imdb_id = re.search(
+                    "(?<=title\/)(.*)(?=\/)", link).groups(0)[0]
+                table_data.append(imdb_id)
+            except Exception:
+                pass
+
+            table_data.append(x.text)
+
         # If data not returned, break out of loop
         if not table_data:
             break
 
-        temp_list = [table_data[i:i+4] for i in range(0, len(table_data), 4)] # put every 4 values in a row
+        temp_list = [table_data[i:i+5] for i in range(0, len(table_data), 5)] # put every 5 values in a row
 
         for temp in temp_list:
             final_list.append(temp)
@@ -42,7 +55,8 @@ def get_weekend():
     w = 1
     for yr in range(1977, 1978):
         for w in range(1, 54):
-            page = 'https://www.boxofficemojo.com/weekend/' + str(yr) + 'W' + str(w)
+            key = str(yr) + 'W' + str(w)
+            page = 'https://www.boxofficemojo.com/weekend/' + key
             print('Processing: ', page)
             resp = requests.get(page)
             soup = BeautifulSoup(resp.text, 'lxml')
@@ -56,8 +70,11 @@ def get_weekend():
             if table_data:
                 print('Adding page')
                 # put every 4 values in a row
+                temp_list = []
                 temp_list = [table_data[i:i+11] for i in range(0, len(table_data), 11)]
+
                 for temp in temp_list:
+                    temp.append(key)
                     final_list.append(temp)
 
     return final_list
@@ -65,6 +82,3 @@ def get_weekend():
 if __name__ == "__main__":
     # box_office = get_lifetime()
     weekend = get_weekend()
-
-
-### ADD IN ID IN BOTH TO GET_LIFETIME
