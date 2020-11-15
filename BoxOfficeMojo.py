@@ -54,9 +54,9 @@ def get_weekend():
 
     final_list = []
     w = 1
-    for yr in range(1977, 1978):
+    for yr in range(1977, 2021):
         for w in range(1, 54):
-            key = str(yr) + 'W' + str(w)
+            key = str(yr) + 'W' + str(w).zfill(2)
             page = 'https://www.boxofficemojo.com/weekend/' + key
             print('Processing: ', page)
             resp = requests.get(page)
@@ -70,7 +70,6 @@ def get_weekend():
 
             if table_data:
                 print('Adding page')
-                # put every 4 values in a row
                 temp_list = []
                 temp_list = [table_data[i:i+11] for i in range(0, len(table_data), 11)]
 
