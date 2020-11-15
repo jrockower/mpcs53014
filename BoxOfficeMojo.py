@@ -1,5 +1,6 @@
 import requests
 import re
+import csv
 from bs4 import BeautifulSoup
 
 def get_lifetime():
@@ -79,6 +80,15 @@ def get_weekend():
 
     return final_list
 
+
 if __name__ == "__main__":
-    # box_office = get_lifetime()
+    box_office = get_lifetime()
     weekend = get_weekend()
+
+    with open('data/lifetime_box_office.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(box_office)
+
+    with open('data/weekly_box_office.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(weekend)
