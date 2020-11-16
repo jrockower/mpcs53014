@@ -76,9 +76,8 @@ def get_weekend(max_imdb_count = 5):
     final_list = []
     imdb_count = 0
     w = 1
-    # for yr in range(1977, 1979):
-    for yr in range(1998, 1999):
-        for w in range(1, 20):
+    for yr in range(1977, 2021):
+        for w in range(1, 54):
             key = str(yr) + 'W' + str(w).zfill(2)
             page = 'https://www.boxofficemojo.com/weekend/' + key
             print('Processing: ', page)
