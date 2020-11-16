@@ -44,18 +44,41 @@ def get_lifetime():
     return final_list
 
 
-def get_weekend():
+def find_imdb_id(release):
+    '''
+    Purpose: Based on a release ID, find the IMDb ID of a given movie.
+    Inputs: release (str)
+    Returns: an IMDb ID (str)
+    '''
+
+    page = 'https://www.boxofficemojo.com/release/' + release
+    resp = requests.get(page)
+    soup = BeautifulSoup(resp.text, 'lxml')
+
+    for x in soup.findAll('a', href=True):
+        try:
+            link = x['href']
+            imdb_id = re.search("(?<=title\/)(.*)(?=\/)", link).groups(0)[0]
+            return imdb_id
+        except Exception:
+            pass
+
+
+def get_weekend(max_imdb_count = 5):
     '''
     Purpose: Get historical weekend Domestic Box Office Data from Box Office
              Mojo.
-    Inputs: None
+    Inputs: max_imdb_count - the maximum number of observations to include
+                             for each week
     Returns: a list of lists
     '''
 
     final_list = []
+    imdb_count = 0
     w = 1
-    for yr in range(1977, 2021):
-        for w in range(1, 54):
+    # for yr in range(1977, 1979):
+    for yr in range(1998, 1999):
+        for w in range(1, 20):
             key = str(yr) + 'W' + str(w).zfill(2)
             page = 'https://www.boxofficemojo.com/weekend/' + key
             print('Processing: ', page)
@@ -64,18 +87,37 @@ def get_weekend():
             # https://github.com/eliasdabbas/word_frequency/blob/master/data_scraping/boxoffice.py
             table_data = []
             for x in soup.select('tr td'):
+                # Find IMDb ID
+                try:
+                    # Try to extract the IMDb ID
+                    link = x.findAll('a')[0].get('href')
+                    release = re.search(
+                        "(?<=release\/)(.*)(?=\/)", link).groups(0)[0]
+                    imdb_id = find_imdb_id(release)
+                    imdb_count += 1
+                    table_data.append(imdb_id)
+                except Exception:
+                    pass
+
                 # Don't include hidden attributes
                 if 'hidden' not in x['class']:
                     table_data.append(x.text)
 
+                # Break when you have the top 5 and there is a multiple of 12
+                # observations in table_data
+                if (imdb_count == max_imdb_count) & (len(table_data) % 12 == 0):
+                    break
+
             if table_data:
                 print('Adding page')
                 temp_list = []
-                temp_list = [table_data[i:i+11] for i in range(0, len(table_data), 11)]
+                temp_list = [table_data[i:i+12] for i in range(0, len(table_data), 12)]
 
                 for temp in temp_list:
                     temp.append(key)
                     final_list.append(temp)
+
+            imdb_count = 0
 
     return final_list
 
