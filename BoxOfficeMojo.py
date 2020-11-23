@@ -1,6 +1,7 @@
 import requests
 import re
 import csv
+import pandas as pd
 from bs4 import BeautifulSoup
 
 def get_lifetime():
@@ -102,7 +103,7 @@ def get_weekend(max_imdb_count = 5):
                 if 'hidden' not in x['class']:
                     table_data.append(x.text)
 
-                # Break when you have the top 5 and there is a multiple of 12
+                # Break when you have the top and there is a multiple of 12
                 # observations in table_data
                 if (imdb_count == max_imdb_count) & (len(table_data) % 12 == 0):
                     break
@@ -123,12 +124,17 @@ def get_weekend(max_imdb_count = 5):
 
 if __name__ == "__main__":
     box_office = get_lifetime()
-    weekend = get_weekend()
+    weekend = get_weekend(10)
+
+    weekend_df = pd.DataFrame(weekend)
+    # Remove newline characters from distributor column
+    weekend_df.iloc[:, 11] = weekend_df.iloc[:, 11].str.replace('\n', '')
+    weekend_df.to_csv('data/weekly_box_office.csv', header=False, index=False)
 
     with open('data/lifetime_box_office.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(box_office)
 
-    with open('data/weekly_box_office.csv', 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows(weekend)
+    # with open('data/weekly_box_office.csv', 'w', newline='') as f:
+    #     writer = csv.writer(f)
+    #     writer.writerows(weekend)
