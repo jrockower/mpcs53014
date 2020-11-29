@@ -1,3 +1,6 @@
+drop table jrockower_lifetime_box_office;
+drop table jrockower_weekly_box_office;
+
 CREATE TEMPORARY TABLE jrockower_lt_box_office (rank SMALLINT, filmid STRING, title STRING, lifetimegross STRING, year BIGINT)
 ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 WITH SERDEPROPERTIES (

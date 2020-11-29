@@ -1,3 +1,8 @@
+drop table jrockower_name_basics;
+drop table jrockower_title_basics;
+drop table jrockower_title_crew;
+drop table jrockower_title_ratings;
+
 CREATE EXTERNAL TABLE jrockower_name_basics (id STRING, name STRING, birthyear STRING, deathyear STRING, profession STRING, knownfor STRING)
 ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
 WITH SERDEPROPERTIES (

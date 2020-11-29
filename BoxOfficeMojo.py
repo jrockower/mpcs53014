@@ -2,6 +2,7 @@ import requests
 import re
 import csv
 import pandas as pd
+import s3fs
 from bs4 import BeautifulSoup
 
 def get_lifetime():
@@ -123,18 +124,19 @@ def get_weekend(max_imdb_count = 5):
 
 
 if __name__ == "__main__":
+    s3 = s3fs.S3FileSystem(anon=False)
+
     box_office = get_lifetime()
+    box_office_df = pd.DataFrame(box_office)
+
+    with s3.open(f"jrockower-mpcs53014/lifetime_box_office/lifetime_box_office.csv", 'w') as f:
+        box_office_df.to_csv(f, header=False, index=False)
+
     weekend = get_weekend(10)
 
     weekend_df = pd.DataFrame(weekend)
     # Remove newline characters from distributor column
     weekend_df.iloc[:, 11] = weekend_df.iloc[:, 11].str.replace('\n', '')
-    weekend_df.to_csv('data/weekly_box_office.csv', header=False, index=False)
 
-    with open('data/lifetime_box_office.csv', 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows(box_office)
-
-    # with open('data/weekly_box_office.csv', 'w', newline='') as f:
-    #     writer = csv.writer(f)
-    #     writer.writerows(weekend)
+    with s3.open(f"jrockower-mpcs53014/weekly_box_office/weekly_box_office.csv", 'w') as f:
+        weekend_df.to_csv(f, header=False, index=False)
