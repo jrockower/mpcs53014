@@ -30,5 +30,16 @@ val combined = spark.sql("""select a.*, b.director1, b.director2, b.director3, b
 combined.createOrReplaceTempView("combined")
 
 val weekly = spark.sql("""select * from jrockower_weekly_box_office""")
+weekly.createOrReplaceTempView("weekly")
 
 val lifetime = spark.sql("""select * from jrockower_lifetime_box_office""")
+lifetime.createOrReplaceTempView("lifetime")
+
+val box_office = spark.sql("""select a.*, b.rank as lifetime_rank, b.lifetimegross as lifetime_gross from weekly a left join lifetime b on a.filmid = b.filmid""")
+box_office.createOrReplaceTempView("box_office")
+
+val box_office_all = spark.sql("""select a.*, b.startyear, b.runtime_min, b.genres, b.avg_rating, b.num_votes, b.director1, b.director2, b.director3, b.writer1, b.writer2, b.writer3 from box_office a left join combined b on a.filmid = b.filmid""")
+box_office_all.createOrReplaceTempView("box_office_all")
+
+import org.apache.spark.sql.SaveMode
+box_office_all.write.mode(SaveMode.Overwrite).saveAsTable("jrockower_box_office_combined")
