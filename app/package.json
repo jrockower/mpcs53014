@@ -15,5 +15,9 @@
     "mustache": "^4.0.1",
     "node-thrift2-hbase": "^0.6.2",
     "node-zookeeper-client": "^1.1.0"
+  },
+  "devDependencies": {
+    "bootstrap": "^4.5.3",
+    "jquery": "^3.5.1"
   }
 }
