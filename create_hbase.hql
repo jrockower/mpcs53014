@@ -16,3 +16,12 @@ TBLPROPERTIES ('hbase.table.name' = 'jrockower_box_office_hbase');
 
 insert overwrite table jrockower_box_office_hbase
 select concat(yr_week, rank) as id, * from jrockower_box_office_combined;
+
+create external table jrockower_film_keys_hbase (
+  film string, yr_week string)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES ('hbase.columns.mapping' = ':key, titles:yr_week')
+TBLPROPERTIES ('hbase.table.name' = 'jrockower_film_keys_hbase');
+
+insert overwrite table jrockower_film_keys_hbase
+select * from jrockower_film_keys;

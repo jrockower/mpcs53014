@@ -41,5 +41,12 @@ box_office.createOrReplaceTempView("box_office")
 val box_office_all = spark.sql("""select a.*, b.startyear, b.runtime_min, b.genres, b.avg_rating, b.num_votes, b.director1, b.director2, b.director3, b.writer1, b.writer2, b.writer3 from box_office a left join combined b on a.filmid = b.filmid""")
 box_office_all.createOrReplaceTempView("box_office_all")
 
+val keys = spark.sql("""select title, filmid, yr_week from (select *, row_number() over (partition by title, filmid order by yr_week) rn from jrockower_weekly_box_office) q where rn = 1 order by title, filmid""")
+keys.createOrReplaceTempView("keys")
+
+val keys_final = spark.sql("""select concat(a.title, ' (', b.startyear, ')') as id, a.yr_week from keys a left join titles b on a.filmid = b.filmid""")
+keys.createOrReplaceTempView("keys_final")
+
 import org.apache.spark.sql.SaveMode
 box_office_all.write.mode(SaveMode.Overwrite).saveAsTable("jrockower_box_office_combined")
+keys_final.write.mode(SaveMode.Overwrite).saveAsTable("jrockower_film_keys")
