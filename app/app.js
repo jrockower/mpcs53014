@@ -27,19 +27,14 @@ function rowToMap(row) {
 }
 
 hclient.table('jrockower_box_office_hbase').row('2020W101').get((error, value) => {
-	console.info(rowToMap(value))
 	console.info(value)
 })
 
 hclient.table('jrockower_film_keys_hbase').row('Superman II (1980)').get((error, value) => {
-	console.info(rowToMap(value))
 	console.info(value)
 })
 
 app.use(express.static('public'));
-
-app.get('/')
-
 app.get('/films-request.html', function (req, res) {
 	hclient.table('jrockower_film_keys_hbase').scan({ maxVersions: 1}, (err,rows) => {
 		var template = filesystem.readFileSync("films.mustache").toString();
@@ -57,6 +52,65 @@ function removePrefix(text, prefix) {
 	return text.substr(prefix.length)
 }
 
+app.get('/films-request-output.html', function (req, res) {
+	const film = req.query['film'];
+	console.log(film);
+
+	// function processfilmRecord(filmrecord) {
+	// 	var result = { rank : filmrecord['rank']};
+	// 	["all", "clear", "fog", "hail", "rain", "snow", "thunder", "tornado"].forEach(weather => {
+	// 		var flights = yearRecord[weather + '_flights']
+	// 		var ontime_flights = yearRecord[weather + "_ontime"]
+	// 		result[weather] = flights == 0 ? "-" : (100 * ontime_flights/flights).toFixed(1)+'%';
+	// 	})
+	// 	console.log(result);
+	// 	return result;
+	// }
+
+	function filminfo(cells) {
+		var result = [];
+		var filmRecord;
+		cells.forEach(function (cell) {
+			console.info(cell['key'])
+			var rank = Number(removePrefix(cell['key'], film))
+			if(filmRecord === undefined) {
+				filmRecord = { rank: rank }
+			} else if (filmRecord['rank'] != rank ) {
+				result.push(processfilmRecord(filmRecord))
+				filmRecord = { rank: rank }
+			}
+			filmRecord[removePrefix(cell['column'],'films:')] = cell['$']
+		})
+		result.push(processfilmRecord(filmRecord))
+		// console.info(result)
+		return result;
+
+	}
+
+	hclient.table('jrockower_film_keys_hbase').row(film).get((error, value) => {
+		console.info(value)
+		var week = value[0]['$']
+
+		hclient.table('jrockower_box_office_hbase').scan(
+			{filter: {type : "PrefixFilter", value: week}, maxVersions: 1}, (err, cells) => {
+				console.info(cells);
+				var fi = filminfo(cells);
+				console.info(fi)
+			});
+	})
+
+})
+
+app.get('/airline-ontime.html', function (req, res) {
+	hclient.table('spertus_carriers').scan({ maxVersions: 1}, (err,rows) => {
+		var template = filesystem.readFileSync("airline-ontime.mustache").toString();
+		var html = mustache.render(template, {
+			airlines : rows
+		});
+		res.send(html)
+	})
+});
+
 app.get('/airline-ontime-delays.html',function (req, res) {
 	const airline=req.query['airline'];
 	console.log(airline);
@@ -67,12 +121,16 @@ app.get('/airline-ontime-delays.html',function (req, res) {
 			var ontime_flights = yearRecord[weather + "_ontime"]
 			result[weather] = flights == 0 ? "-" : (100 * ontime_flights/flights).toFixed(1)+'%';
 		})
+		// console.log('here');
+		// console.log(result);
 		return result;
 	}
 	function airlineInfo(cells) {
 		var result = [];
 		var yearRecord;
 		cells.forEach(function(cell) {
+			console.info('printing cell')
+			console.info(cell)
 			var year = Number(removePrefix(cell['key'], airline))
 			if(yearRecord === undefined)  {
 				yearRecord = { year: year }
