@@ -31,15 +31,20 @@ hclient.table('jrockower_box_office_hbase').row('2020W101').get((error, value) =
 	console.info(value)
 })
 
+hclient.table('jrockower_film_keys_hbase').row('Superman II (1980)').get((error, value) => {
+	console.info(rowToMap(value))
+	console.info(value)
+})
+
 app.use(express.static('public'));
 
 app.get('/')
 
-app.get('/airline-ontime.html', function (req, res) {
-	hclient.table('spertus_carriers').scan({ maxVersions: 1}, (err,rows) => {
+app.get('/films-request.html', function (req, res) {
+	hclient.table('jrockower_film_keys_hbase').scan({ maxVersions: 1}, (err,rows) => {
 		var template = filesystem.readFileSync("films.mustache").toString();
 		var html = mustache.render(template, {
-			airlines : rows
+			films : rows
 		});
 		res.send(html)
 	})
