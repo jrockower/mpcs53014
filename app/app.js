@@ -65,7 +65,8 @@ app.get('/films-request-output.html', function (req, res) {
 		cells.forEach(function (cell) {
 			// console.info(cell['key'])
 			// console.log(film)
-			var rank = Number(removePrefix(cell['key'], week))
+			// var rank = Number(removePrefix(cell['key'], week))
+			var rank = Number(cell['key'].substring(cell['key'].length - 2))
 			if(filmRecord === undefined) {
 				filmRecord = { rank: rank }
 			} else if (filmRecord['rank'] != rank ) {
