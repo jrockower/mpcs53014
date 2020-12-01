@@ -18,14 +18,6 @@ const port = Number(process.argv[2]);
 const hbase = require('hbase')
 var hclient = hbase({ host: process.argv[3], port: Number(process.argv[4])})
 
-function rowToMap(row) {
-	var stats = {}
-	row.forEach(function (item) {
-		stats[item['column']] = Number(item['$'])
-	});
-	return stats;
-}
-
 hclient.table('jrockower_box_office_hbase').row('2020W101').get((error, value) => {
 	console.info(value)
 })
@@ -67,21 +59,25 @@ app.get('/films-request-output.html', function (req, res) {
 	// 	return result;
 	// }
 
-	function filminfo(cells) {
+	function filminfo(cells, week) {
 		var result = [];
 		var filmRecord;
 		cells.forEach(function (cell) {
-			console.info(cell['key'])
-			var rank = Number(removePrefix(cell['key'], film))
+			// console.info(cell['key'])
+			// console.log(film)
+			var rank = Number(removePrefix(cell['key'], week))
 			if(filmRecord === undefined) {
 				filmRecord = { rank: rank }
 			} else if (filmRecord['rank'] != rank ) {
-				result.push(processfilmRecord(filmRecord))
+				// result.push(processfilmRecord(filmRecord))
+				result.push(filmRecord)
+				console.log(filmRecord)
 				filmRecord = { rank: rank }
 			}
 			filmRecord[removePrefix(cell['column'],'films:')] = cell['$']
 		})
-		result.push(processfilmRecord(filmRecord))
+		// result.push(processfilmRecord(filmRecord))
+		result.push(filmRecord)
 		// console.info(result)
 		return result;
 
@@ -89,13 +85,19 @@ app.get('/films-request-output.html', function (req, res) {
 
 	hclient.table('jrockower_film_keys_hbase').row(film).get((error, value) => {
 		console.info(value)
-		var week = value[0]['$']
+		const week = value[0]['$']
 
 		hclient.table('jrockower_box_office_hbase').scan(
 			{filter: {type : "PrefixFilter", value: week}, maxVersions: 1}, (err, cells) => {
 				console.info(cells);
-				var fi = filminfo(cells);
-				console.info(fi)
+				var fi = filminfo(cells, week);
+				console.info(fi);
+				var template = filesystem.readFileSync("films-output.mustache").toString();
+				var html = mustache.render(template, {
+					filmInfo : fi,
+					filmname : film
+				});
+				res.send(html)
 			});
 	})
 

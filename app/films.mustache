@@ -8,23 +8,24 @@
   </head>
   <body>
     <p style="margin-bottom:2cm"/>
-    <form action="/films-request-output.html" style="width:500px;height:50px;margin:0 auto;background:#FFFFFF" method="get" target="results_iframe" class="form-control">
+<!--    <form action="/films-request-output.html" style="width:500px;height:50px;margin:0 auto;background:#FFFFFF" method="get" target="results_iframe" class="form-control">-->
+    <form action="/films-request-output.html" style="width:500px;height:50px;margin:0 auto;background:#FFFFFF" method="get" class="form-control">
         <div style="white-space: nowrap"><label>
 	<span class="myarrow">
         <span>Film:</span>
-	<input list="films" name="films" placeholder="Enter film"/>
+	<input list="films" name="film" placeholder="Enter film"/>
           <datalist id="films">
               {{#films}}
               <option value="{{key}}">
-              {{/films}}
+              {{/films}} come
           </datalist></span>
         </label>
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
+<!--        <button type="submit" class="btn btn-primary", style="margin-top:.5cm">Submit</button>-->
     </form>
 
     <p style="margin-bottom:2cm"/>
 
-    <iframe frameBorder="0" onload="resizeIframe(this)" name="results_iframe" style="display:block;width:70%;margin-left:auto;margin-right:auto"/>
+<!--    <iframe frameBorder="0" onload="resizeIframe(this)" name="results_iframe" style="display:block;width:70%;margin-left:auto;margin-right:auto"/>-->
   </body>
 </html>
