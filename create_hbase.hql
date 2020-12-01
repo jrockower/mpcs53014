@@ -1,8 +1,8 @@
 create external table jrockower_box_office_hbase (
   id string, rank bigint, last_week string, filmid string, title string,
-  gross bigint, change_lastweek string, theaters bigint, thtr_chg string, thtr_avg bigint,
-  total_gross bigint, weeks smallint, distributor string, yr_week string, lifetime_rank bigint,
-  lifetime_gross bigint, startyear smallint, runtime_min bigint, genres string, avg_rating float,
+  gross string, change_lastweek string, theaters string, thtr_chg string, thtr_avg string,
+  total_gross string, weeks smallint, distributor string, yr_week string, lifetime_rank string,
+  lifetime_gross string, startyear smallint, runtime_min bigint, genres string, avg_rating float,
   num_votes bigint, director1 string, director2 string, director3 string,
   writer1 string, writer2 string, writer3 string)
 STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
@@ -14,8 +14,11 @@ films:num_votes, films:director1, films:director2, films:director3, films:writer
 films:writer2, films:writer3')
 TBLPROPERTIES ('hbase.table.name' = 'jrockower_box_office_hbase');
 
+create temporary table jrockower_intermediate as
+select concat(yr_week, rank + 1000000) as id, * from jrockower_box_office_combined;
+
 insert overwrite table jrockower_box_office_hbase
-select concat(yr_week, rank) as id, * from jrockower_box_office_combined;
+select * from jrockower_intermediate;
 
 create external table jrockower_film_keys_hbase (
   film string, yr_week string)
@@ -25,3 +28,4 @@ TBLPROPERTIES ('hbase.table.name' = 'jrockower_film_keys_hbase');
 
 insert overwrite table jrockower_film_keys_hbase
 select * from jrockower_film_keys;
+
