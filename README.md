@@ -17,11 +17,69 @@ To make the scraping process shorter for the limited purpose of this project, I 
     * Gets domestic all-time rankings along with weekend box office results.
     * Note this takes several hours to run in total.
     * Saves directly to S3:
-        * `s3://jrockower-mpcs53014/lifetime_box_office/lifetime_box_office.csv`
-        * `s3://jrockower-mpcs53014/weekly_box_office/weekly_box_office.csv`
+      * `s3://jrockower-mpcs53014/lifetime_box_office/lifetime_box_office.csv`
+      * `s3://jrockower-mpcs53014/weekly_box_office/weekly_box_office.csv`
 * [get_imdb.sh](./get_imdb.sh)
     * Shell script to get IMDb data.
     * To copy to Hadoop, use:
-        * `scp -i ~/.ssh/jrockower.pem /home/jrockower/git/mpcs53014/get_imdb.sh hadoop@ec2-52-15-169-10.us-east-2.compute.amazonaws.com:jrockower`
+      * `scp -i ~/.ssh/jrockower.pem /home/jrockower/git/mpcs53014/get_imdb.sh hadoop@ec2-52-15-169-10.us-east-2.compute.amazonaws.com:jrockower`
     * From `/home/hadoop/jrockower`, use `sh ./get_imdb.sh`
+      * Uses `curl` to put the gz files on hdfs. Then, `gunzip` and save to S3.
     * Saves files to `s3://jrockower-mpcs53014`
+
+# Step 2 - Get Tables into Hive
+* `beeline -u jdbc:hive2://localhost:10000/default -n hadoop -d org.apache.hive.jdbc.HiveDriver`
+* Create box office tables:
+    * [create_box_office.hql](./create_box_office.hql)
+      * Uses CSV serde to create temporary tables and then saves these to Hive-managed tables.
+    * jrockower_weekly_box_office
+    * jrockower_lifetime_box_office
+* Create IMDb tables:
+    * [create_imdb_tables.hql](./create_imdb_tables.hql)
+      * Uses CSV serde to save these tables in S3
+    * jrockower_name_basics
+    * jrockower_title_basics
+    * jrockower_title_crew
+    * jrockower_title_ratings
+
+# Step 3 - Build Views using Spark
+* `spark-shell`
+* Run [create_views.scala](./create_views.scala) to build the two main views:
+1. `jrockower_box_office_combined`
+   * Data are at the year/week/rank level.
+     * An individual row tells you, for a particular year and week, what the x number movie was at the box office.
+2. `jrockower_film_keys`
+   * A mapping from the name of a film (using both title and year) to the opening weekend for that film. Will be used to map user input to rows from `jrockower_box_office_combined`.
+
+# Step 4 - Save Views to HBase
+* `hbase shell`
+* `create table 'jrockower_film_keys_hbase', 'titles'`
+* `create table 'jrockower_box_office_hbase', 'films'`
+
+* `beeline -u jdbc:hive2://localhost:10000/default -n hadoop -d org.apache.hive.jdbc.HiveDriver`
+* Run [create_hbase.hql](./create_hbase.hql) to save these views to HBase.
+  * For `jrockower_box_office_hbase`, setting the key to a concatenated field of year/week/rank + 1000000. Because HBase sorts lexicographically, by making every rank the same number of digits, this allows a proper sort.
+
+* If need to recreate:
+hive:
+drop table jrockower_film_keys_hbase;
+drop table jrockower_box_office_hbase;
+
+hbase shell
+disable 'jrockower_film_keys_hbase'
+drop 'jrockower_film_keys_hbase'
+disable 'jrockower_box_office_hbase'
+drop 'jrockower_box_office_hbase'
+
+# Step 5 - Application
+
+# Speed Layer
+Speed layer:
+Increment adding imdb vote
+Add additional rating and change the number reviewed
+Maybe add like 100 at a time to actually see a result
+
+Can do same with per-screen average
+
+To do:
+fix html on landing page to state the purpose and how to use it
