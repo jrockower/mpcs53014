@@ -10,7 +10,7 @@ WITH SERDEPROPERTIES ('hbase.columns.mapping' = ':key, films:rank, films:last_we
 films:title, films:gross, films:change_lastweek, films:theaters, films:thtr_chg, films:thtr_avg,
 films:total_gross, films:weeks, films:distributor, films:yr_week, films:lifetime_rank,
 films:lifetime_gross, films:startyear, films:runtime_min, films:genres, films:avg_rating,
-films:num_votes, films:director1, films:director2, films:director3, films:writer1,
+films:num_votes#b, films:director1, films:director2, films:director3, films:writer1,
 films:writer2, films:writer3')
 TBLPROPERTIES ('hbase.table.name' = 'jrockower_box_office_hbase');
 
@@ -28,4 +28,3 @@ TBLPROPERTIES ('hbase.table.name' = 'jrockower_film_keys_hbase');
 
 insert overwrite table jrockower_film_keys_hbase
 select * from jrockower_film_keys;
-
