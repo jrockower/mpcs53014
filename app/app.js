@@ -1,18 +1,13 @@
 'use strict';
-const http = require('http');
-var assert = require('assert');
 const express = require('express');
-
 if (typeof window !== "undefined") {
 	require("jquery");
 	require("bootstrap");
 }
 
-// const bootstrap = require('bootstrap');
 const app = express();
 const mustache = require('mustache');
 const filesystem = require('fs');
-const url = require('url');
 const port = Number(process.argv[2]);
 
 const hbase = require('hbase')
@@ -40,61 +35,74 @@ app.get('/films-request-output.html', function (req, res) {
 	const film = req.query['film'];
 	console.log(film);
 
-	// function processfilmRecord(filmrecord) {
-	// 	var result = { rank : filmrecord['rank']};
-	// 	["all", "clear", "fog", "hail", "rain", "snow", "thunder", "tornado"].forEach(weather => {
-	// 		var flights = yearRecord[weather + '_flights']
-	// 		var ontime_flights = yearRecord[weather + "_ontime"]
-	// 		result[weather] = flights == 0 ? "-" : (100 * ontime_flights/flights).toFixed(1)+'%';
-	// 	})
-	// 	console.log(result);
-	// 	return result;
-	// }
+	function processfilmRecord(filmRecord) {
+		var result = filmRecord;
+		var writer1 = result["writer1"];
+		var director1 = result["director1"]
 
-	function filminfo(cells, week) {
+		if ("writer2" in filmRecord) {
+			if ("writer3" in filmRecord) {
+				var all_writers = writer1 + ', ' + filmRecord["writer2"] + ', ' + filmRecord["writer3"]
+			} else {
+				var all_writers = writer1 + ', ' + filmRecord["writer2"]
+			}
+		} else {
+			var all_writers = writer1
+		}
+
+		if ("director2" in filmRecord) {
+			if ("director3" in filmRecord) {
+				var all_directors = director1 + ', ' + filmRecord["director2"] + ', ' + filmRecord["director3"]
+			} else {
+				var all_directors = director1 + ', ' + filmRecord["director2"]
+			}
+		} else {
+			var all_directors = director1
+		}
+
+		result['writers'] = all_writers
+		result['directors'] = all_directors
+		// Change format of number of votes to use comma format
+		result['num_votes'] = parseFloat(filmRecord['num_votes']).toLocaleString('en')
+		console.log(result)
+		return result
+	}
+
+	function filminfo(cells) {
 		var result = [];
 		var filmRecord;
 		cells.forEach(function (cell) {
-			// console.info(cell['key'])
-			// console.log(film)
 			var rank = Number(cell['key'].substring(cell['key'].length - 2))
 			if(filmRecord === undefined) {
 				filmRecord = { rank: rank }
 			} else if (filmRecord['rank'] != rank ) {
-				// result.push(processfilmRecord(filmRecord))
-				result.push(filmRecord)
-				console.log(filmRecord)
+				result.push(processfilmRecord(filmRecord))
 				filmRecord = { rank: rank }
 			}
 			filmRecord[removePrefix(cell['column'],'films:')] = cell['$']
 		})
-		// result.push(processfilmRecord(filmRecord))
-		result.push(filmRecord)
-		// console.info(result)
+		result.push(processfilmRecord(filmRecord))
 		return result;
 
 	}
 
 	hclient.table('jrockower_film_keys_hbase').row(film).get((error, value) => {
-		console.info(value)
 		const week = value[0]['$']
+		const week_formatted = week.substr(0, 4) + ' Week ' + week.substr(week.length - 2, 2)
 
 		hclient.table('jrockower_box_office_hbase').scan(
 			{filter: {type : "PrefixFilter", value: week}, maxVersions: 1}, (err, cells) => {
-				console.info(cells);
 				var fi = filminfo(cells, week);
-				console.info(fi);
 				var template = filesystem.readFileSync("films-output.mustache").toString();
 				var html = mustache.render(template, {
 					filmInfo : fi,
 					filmname : film,
-					week : week
+					week : week_formatted
 				});
 				res.send(html)
 			});
 	})
 
 })
-
 
 app.listen(port);

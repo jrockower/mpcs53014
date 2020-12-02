@@ -7,13 +7,15 @@
     <title>Films Output</title>
   </head>
   <body style="background-color:#d5e1df">
-    <a style="margin-top:10px" class="btn btn-primary" href="/films-request.html" role="button">Enter another film</a>
-    <h3 style="text-align:center;margin-top:10px">Box Office Opening Weekend for {{filmname}} in {{week}}</h3>
+    <a style="margin-top:10px;margin-left:10px" class="btn btn-primary" href="/films-request.html" role="button">Enter another film</a>
+    <h3 style="text-align:center;margin-top:10px">Box Office Opening Weekend for {{filmname}}</h3>
+    <h3 style="text-align:center">{{week}}</h3>
     <p style="bottom-margin:10px">
-      <table class="table table-striped" style="width:60%;margin:auto;">
-	<tr><th>Rank</th><td>Title</td><td>Director</td><td>Lifetime Gross</td><td>Lifetime Gross Rank</td><td>Per-Screen Average</td><td>Runtime (Minutes)</td><td>Average IMDb Rating</td><td>Year</td><td>Genres</td><td>Distributor</td></tr>
+      <table class="table table-striped" style="width:70%;margin:auto;">
+	<tr><th>Rank</th><td>Title</td><td>Director(s)</td><td>Writer(s)</td><td>Lifetime Gross</td><td>Lifetime Gross Rank</td><td>Per-Screen Average</td><td>Runtime (Minutes)</td><td>Average IMDb Rating</td><td>Number of IMDB Reviews</td>
+        <td>Year</td><td>Genres</td><td>Distributor</td></tr>
         {{#filmInfo}}
-	<tr><td><b>{{rank}}</b></td><td>{{title}}</td><td>{{director1}}</td><td>{{lifetime_gross}}</td><td>{{lifetime_rank}}</td><td>{{thtr_avg}}</td><td>{{runtime_min}}</td><td>{{avg_rating}}</td>
+	<tr><td><b>{{rank}}</b></td><td>{{title}}</td><td>{{directors}}</td><td>{{writers}}</td><td>{{lifetime_gross}}</td><td>{{lifetime_rank}}</td><td>{{thtr_avg}}</td><td>{{runtime_min}}</td><td>{{avg_rating}}</td><td>{{num_votes}}</td>
 	  <td>{{startyear}}</td><td>{{genres}}</td><td>{{distributor}}</td></tr>
         {{/filmInfo}}
     </table>
