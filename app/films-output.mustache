@@ -6,11 +6,11 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <title>Films Output</title>
   </head>
-  <body>
-    <div style="margin-left:275px;margin-right:auto;display:inline-block;box-shadow: 10px 10px 5px #888888;border:1px solid #000000;-moz-border-radius-bottomleft:9px;-webkit-border-bottom-left-radius:9px;border-bottom-left-radius:9px;-moz-border-radius-bottomright:9px;-webkit-border-bottom-right-radius:9px;border-bottom-right-radius:9px;-moz-border-radius-topright:9px;-webkit-border-top-right-radius:9px;border-top-right-radius:9px;-moz-border-radius-topleft:9px;-webkit-border-top-left-radius:9px;border-top-left-radius:9px;background:white">
-      &nbsp;Box Office Opening Weekend for {{filmname}} in {{week}}&nbsp;</div>
+  <body style="background-color:#d5e1df">
+    <a style="margin-top:10px" class="btn btn-primary" href="/films-request.html" role="button">Enter another film</a>
+    <h3 style="text-align:center;margin-top:10px">Box Office Opening Weekend for {{filmname}} in {{week}}</h3>
     <p style="bottom-margin:10px">
-      <table class="table-hover" style="width:60%;margin:auto;">
+      <table class="table table-striped" style="width:60%;margin:auto;">
 	<tr><th>Rank</th><td>Title</td><td>Director</td><td>Lifetime Gross</td><td>Lifetime Gross Rank</td><td>Per-Screen Average</td><td>Runtime (Minutes)</td><td>Average IMDb Rating</td><td>Year</td><td>Genres</td><td>Distributor</td></tr>
         {{#filmInfo}}
 	<tr><td><b>{{rank}}</b></td><td>{{title}}</td><td>{{director1}}</td><td>{{lifetime_gross}}</td><td>{{lifetime_rank}}</td><td>{{thtr_avg}}</td><td>{{runtime_min}}</td><td>{{avg_rating}}</td>
