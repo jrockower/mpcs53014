@@ -28,3 +28,13 @@ TBLPROPERTIES ('hbase.table.name' = 'jrockower_film_keys_hbase');
 
 insert overwrite table jrockower_film_keys_hbase
 select * from jrockower_film_keys;
+
+create external table jrockower_ratings_hbase (
+  film string, total_score bigint, num_votes bigint)
+  STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES ('hbase.columns.mapping' = ':key, ratings:total_score#b, ratings:num_votes#b')
+TBLPROPERTIES ('hbase.table.name' = 'jrockower_ratings_hbase');
+
+
+insert overwrite table jrockower_ratings_hbase
+select * from jrockower_ratings;

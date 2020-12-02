@@ -47,6 +47,11 @@ keys.createOrReplaceTempView("keys")
 val keys_final = spark.sql("""select concat(a.title, ' (', b.startyear, ')') as id, a.yr_week from keys a left join titles b on a.filmid = b.filmid""")
 keys.createOrReplaceTempView("keys_final")
 
+val film_ratings = spark.sql("""select concat(a.title, ' (', b.startyear, ')') as id, b.avg_rating * b.num_votes as total_score, b.num_votes
+from keys a left join titles b on a.filmid = b.filmid""")
+film_ratings.createOrReplaceTempView("film_ratings")
+
 import org.apache.spark.sql.SaveMode
 box_office_all.write.mode(SaveMode.Overwrite).saveAsTable("jrockower_box_office_combined")
 keys_final.write.mode(SaveMode.Overwrite).saveAsTable("jrockower_film_keys")
+film_ratings.write.mode(SaveMode.Overwrite).saveAsTable("jrockower_ratings")
