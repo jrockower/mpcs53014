@@ -1,4 +1,6 @@
 'use strict';
+
+//Note: Code adapted from Professor Spertus flights and weather application
 const express = require('express');
 if (typeof window !== "undefined") {
 	require("jquery");
@@ -14,6 +16,8 @@ const hbase = require('hbase')
 var hclient = hbase({ host: process.argv[3], port: Number(process.argv[4])})
 
 app.use(express.static('public'));
+
+//Create Films Request main page. Includes form for user to submit.
 app.get('/films-request.html', function (req, res) {
 	hclient.table('jrockower_film_keys_hbase').scan({ maxVersions: 1}, (err,rows) => {
 		var template = filesystem.readFileSync("films.mustache").toString();
@@ -36,6 +40,7 @@ app.get('/films-request-output.html', function (req, res) {
 	console.log(film);
 
 	function processfilmRecord(filmRecord) {
+		//Each film may have multiple writers/directors. This code creates a concatenated version to display in table.
 		var result = filmRecord;
 		var writer1 = result["writer1"];
 		var director1 = result["director1"]
@@ -62,6 +67,7 @@ app.get('/films-request-output.html', function (req, res) {
 
 		result['writers'] = all_writers
 		result['directors'] = all_directors
+
 		// Change format of number of votes to use comma format
 		result['num_votes'] = parseFloat(filmRecord['num_votes']).toLocaleString('en')
 		console.log(result)
