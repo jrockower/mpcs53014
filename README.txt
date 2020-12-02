@@ -20,5 +20,4 @@ Maybe add like 100 at a time to actually see a result
 Can do same with per-screen average
 
 To do:
-deploy web app
 fix html on landing page to state the purpose and how to use it
