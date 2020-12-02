@@ -35,6 +35,10 @@ function removePrefix(text, prefix) {
 	return text.substr(prefix.length)
 }
 
+function counterToNumber(c) {
+	return Number(Buffer.from(c).readBigInt64BE());
+}
+
 app.get('/films-request-output.html', function (req, res) {
 	const film = req.query['film'];
 	console.log(film);
@@ -69,7 +73,8 @@ app.get('/films-request-output.html', function (req, res) {
 		result['directors'] = all_directors
 
 		// Change format of number of votes to use comma format
-		result['num_votes'] = parseFloat(filmRecord['num_votes']).toLocaleString('en')
+		// result['num_votes'] = parseFloat(filmRecord['num_votes']).toLocaleString('en')
+		result['num_votes'] = parseFloat(counterToNumber(filmRecord['num_votes']).toString()).toLocaleString('en')
 		console.log(result)
 		return result
 	}
