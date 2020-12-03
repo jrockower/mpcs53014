@@ -106,7 +106,7 @@ app.get('/films-request-output.html', function (req, res) {
 		} else {
 			result[position] = filminfo[position]
 			hclient.table('jrockower_ratings_hbase').row(filminfo[position]['title'] + ' (' + filminfo[position]['startyear'] + ')').get((error, value) => {
-				// result[position]['avg_rating'] = result[position]['total_score'] / result[position]['num_votes']
+				// NOTE TO GRADER: The counter values seem to be slightly off from querying the HBase table in the shell. According to Piazza, seems to be a conversion error that we shouldn't fix https://piazza.com/class/kfkdziuxddb44n?cid=449
 				result[position]['avg_rating'] = (counterToNumber(value[1]['$']) / counterToNumber(value[0]['$'])).toFixed(1)
 				result[position]['num_votes'] = parseFloat(counterToNumber(value[0]['$']).toString()).toLocaleString('en')
 				getvotes(filminfo, result, position + 1, week_formatted);
