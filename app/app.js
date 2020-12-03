@@ -72,9 +72,6 @@ app.get('/films-request-output.html', function (req, res) {
 		result['writers'] = all_writers
 		result['directors'] = all_directors
 
-		// Change format of number of votes to use comma format
-		result['num_votes'] = parseFloat(counterToNumber(filmRecord['num_votes']).toString()).toLocaleString('en')
-		console.log(result)
 		return result
 	}
 
@@ -96,6 +93,27 @@ app.get('/films-request-output.html', function (req, res) {
 
 	}
 
+	function getvotes(filminfo, result, position, week_formatted) {
+		if (position > filminfo.length - 1 ) {
+			console.log(result)
+			var template = filesystem.readFileSync("films-output.mustache").toString();
+			var html = mustache.render(template, {
+				filmInfo: result,
+				filmname: film,
+				week: week_formatted
+			});
+			res.send(html)
+		} else {
+			result[position] = filminfo[position]
+			hclient.table('jrockower_ratings_hbase').row(filminfo[position]['title'] + ' (' + filminfo[position]['startyear'] + ')').get((error, value) => {
+				// result[position]['avg_rating'] = result[position]['total_score'] / result[position]['num_votes']
+				result[position]['avg_rating'] = (counterToNumber(value[1]['$']) / counterToNumber(value[0]['$'])).toFixed(1)
+				result[position]['num_votes'] = parseFloat(counterToNumber(value[0]['$']).toString()).toLocaleString('en')
+				getvotes(filminfo, result, position + 1, week_formatted);
+			})
+		}
+	}
+
 	hclient.table('jrockower_film_keys_hbase').row(film).get((error, value) => {
 		const week = value[0]['$']
 		const week_formatted = week.substr(0, 4) + ' Week ' + week.substr(week.length - 2, 2)
@@ -103,18 +121,9 @@ app.get('/films-request-output.html', function (req, res) {
 		hclient.table('jrockower_box_office_hbase').scan(
 			{filter: {type: "PrefixFilter", value: week}, maxVersions: 1}, (err, cells) => {
 				var fi = filminfo(cells, week);
-				// hclient.table('jrockower_ratings_hbase').row(filmRecord['title'] + ' (' + filmRecord['startyear'] + ')').get((error, value) => {
-				// 	console.log(parseFloat(counterToNumber(value[0]['$']).toString()).toLocaleString('en'))
-				// 	var votes = parseFloat(counterToNumber(value[0]['$']).toString()).toLocaleString('en')
-				// })
-				console.log(fi)
-				var template = filesystem.readFileSync("films-output.mustache").toString();
-				var html = mustache.render(template, {
-					filmInfo: fi,
-					filmname: film,
-					week: week_formatted
-				});
-				res.send(html)
+				var result = []
+				var position = 0
+				getvotes(fi, result, position, week_formatted)
 			});
 	});
 });
