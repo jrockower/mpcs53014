@@ -1,10 +1,14 @@
+// Load in Tables
+
+// Keep the first three directors and writers in the listed crew
 val crew = spark.sql("""select filmid, split(directors, ',')[0] as dir1, split(directors, ',')[1] as dir2, split(directors, ',')[2] as dir3, split(writers, ',')[0] as writer1, split(writers, ',')[1] as writer2, split(writers, ',')[2] as writer3 from jrockower_title_crew where directors != 'directors'""")
-
-val titles = spark.sql("""select a.filmid, a.titletype, a.primarytitle, a.startyear, a.runtime_min, a.genres, b.avg_rating, b.num_votes from jrockower_title_basics a left join jrockower_title_ratings b on a.filmid = b.filmid where a.filmid != 'tconst' and b.filmid != 'tconst' and a.adult != 1""")
-
 crew.createOrReplaceTempView("crew")
+
+// Add ratings to title information
+val titles = spark.sql("""select a.filmid, a.titletype, a.primarytitle, a.startyear, a.runtime_min, a.genres, b.avg_rating, b.num_votes from jrockower_title_basics a left join jrockower_title_ratings b on a.filmid = b.filmid where a.filmid != 'tconst' and b.filmid != 'tconst' and a.adult != 1""")
 titles.createOrReplaceTempView("titles")
 
+// Iteratively join directors and writers to separate out columns and get the names
 val dir1 = spark.sql("""select a.*, b.name as director1 from crew a left join jrockower_name_basics b on a.dir1 = b.id""")
 dir1.createOrReplaceTempView("dir1")
 
@@ -23,34 +27,42 @@ writers2.createOrReplaceTempView("writers2")
 val writers3 = spark.sql("""select a.*, b.name as screenwriter3 from writers2 a left join jrockower_name_basics b on a.writer3 = b.id""")
 writers3.createOrReplaceTempView("writers3")
 
+// Define crew information with names of crew
 val crew_info = spark.sql("""select filmid, director1, director2, director3, screenwriter1 as writer1, screenwriter2 as writer2, screenwriter3 as writer3 from writers3""")
 crew_info.createOrReplaceTempView("crew_info")
 
+// Combined IMDb data
 val combined = spark.sql("""select a.*, b.director1, b.director2, b.director3, b.writer1, b.writer2, b.writer3 from titles a left join crew_info b on a.filmid = b.filmid""")
 combined.createOrReplaceTempView("combined")
 
+// Load in Box Office
 val weekly = spark.sql("""select * from jrockower_weekly_box_office""")
 weekly.createOrReplaceTempView("weekly")
 
 val lifetime = spark.sql("""select * from jrockower_lifetime_box_office""")
 lifetime.createOrReplaceTempView("lifetime")
 
+// Combine box office together
 val box_office = spark.sql("""select a.*, b.rank as lifetime_rank, b.lifetimegross as lifetime_gross from weekly a left join lifetime b on a.filmid = b.filmid""")
 box_office.createOrReplaceTempView("box_office")
 
+// Join IMDb with box office
 val box_office_all = spark.sql("""select a.*, b.startyear, b.runtime_min, b.genres, b.avg_rating, b.num_votes, b.director1, b.director2, b.director3, b.writer1, b.writer2, b.writer3 from box_office a left join combined b on a.filmid = b.filmid""")
 box_office_all.createOrReplaceTempView("box_office_all")
 
+// Create table of key (name of film concatenated with year) to place into HTML dropdown
 val keys = spark.sql("""select title, filmid, yr_week from (select *, row_number() over (partition by title, filmid order by yr_week) rn from jrockower_weekly_box_office) q where rn = 1 order by title, filmid""")
 keys.createOrReplaceTempView("keys")
 
 val keys_final = spark.sql("""select concat(a.title, ' (', b.startyear, ')') as id, a.yr_week from keys a left join titles b on a.filmid = b.filmid""")
 keys.createOrReplaceTempView("keys_final")
 
+// Create table of votes and rating on films to be able to increment later using Kafka message queue
 val film_ratings = spark.sql("""select concat(a.title, ' (', b.startyear, ')') as id, b.avg_rating * b.num_votes as total_score, b.num_votes
 from keys a left join titles b on a.filmid = b.filmid""")
 film_ratings.createOrReplaceTempView("film_ratings")
 
+// Save
 import org.apache.spark.sql.SaveMode
 box_office_all.write.mode(SaveMode.Overwrite).saveAsTable("jrockower_box_office_combined")
 keys_final.write.mode(SaveMode.Overwrite).saveAsTable("jrockower_film_keys")

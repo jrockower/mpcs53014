@@ -35,6 +35,5 @@ create external table jrockower_ratings_hbase (
 WITH SERDEPROPERTIES ('hbase.columns.mapping' = ':key, ratings:total_score#b, ratings:num_votes#b')
 TBLPROPERTIES ('hbase.table.name' = 'jrockower_ratings_hbase');
 
-
 insert overwrite table jrockower_ratings_hbase
 select * from jrockower_ratings;
