@@ -122,7 +122,6 @@ app.get('/films-request-output.html', function (req, res) {
 /* Send review to kafka */
 var kafka = require('kafka-node');
 var Producer = kafka.Producer;
-var KeyedMessage = kafka.KeyedMessage;
 var kafkaClient = new kafka.KafkaClient({kafkaHost: process.argv[5]});
 var kafkaProducer = new Producer(kafkaClient);
 
