@@ -71,6 +71,8 @@ drop 'jrockower_film_keys_hbase'
 disable 'jrockower_box_office_hbase'
 drop 'jrockower_box_office_hbase'
 
+NEED TO ADD SECTION ON REVIEWS HBASE VIEW
+
 # Step 5 - Application
 
 # Speed Layer
@@ -78,22 +80,9 @@ drop 'jrockower_box_office_hbase'
 Kafka:
 ./kafka-topics.sh --create --zookeeper z-2.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:2181,z-3.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:2181,z-1.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:2181 --replication-factor 1 --partitions 1 --topic jrockower-film-ratings
 
-Speed layer:
-Need to create table that maps films to average rating and number of votes
-then, pull out of the main table
-then, select these in the javascript
-then, learn how to increment
 
 
-
-Increment adding imdb vote
-Add additional rating and change the number reviewed
-Maybe add like 100 at a time to actually see a result
-
-Can do same with per-screen average
+spark-submit --master local[2] --driver-javaptions "-Dlog4j.configuration=file:///home/hadoop/ss.log4j.properties" --class StreamReviews uber-jrockower-speed-1.0-SNAPSHOT.jar b-1.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:9092,b-2.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:9092
 
 To do:
 fix html on landing page to state the purpose and how to use it
-
-
-spark-submit --master local[2] --driver-java-options "-Dlog4j.configuration=file:///home/hadoop/ss.log4j.properties" --class StreamReviews uber-jrockower-speed-1.0-SNAPSHOT.jar b-1.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:9092,b-2.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:9092
