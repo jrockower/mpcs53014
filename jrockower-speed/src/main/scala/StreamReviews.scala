@@ -10,7 +10,6 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.ConnectionFactory
-import org.apache.hadoop.hbase.client.Get
 import org.apache.hadoop.hbase.client.Increment
 import org.apache.hadoop.hbase.util.Bytes
 
@@ -24,28 +23,15 @@ object StreamReviews {
   val hbaseConnection = ConnectionFactory.createConnection(hbaseConf)
   val table = hbaseConnection.getTable(TableName.valueOf("jrockower_ratings_hbase"))
 
-  def getLatestScores(film: String) = {
-    val result = table.get(new Get(Bytes.toBytes(film)))
-    System.out.println(result.isEmpty())
-    if(result.isEmpty())
-      None
-    else
-      Some(CurrentScore(
-        film,
-        Bytes.toLong(result.getValue(Bytes.toBytes("ratings"), Bytes.toBytes("total_score"))),
-        Bytes.toLong(result.getValue(Bytes.toBytes("ratings"), Bytes.toBytes("num_votes")))))
-  }
-
   def incrementScore(kfr : Review) : String = {
-    val maybeLatestScore = getLatestScores(kfr.film)
-    if(maybeLatestScore.isEmpty)
-      return "No current score for " + kfr.film;
-    val latestScore = maybeLatestScore.get
     val inc = new Increment(Bytes.toBytes(kfr.film))
 
+    // Increment total score by the score of incoming review
     inc.addColumn(Bytes.toBytes("ratings"), Bytes.toBytes("total_score"), kfr.review)
+    // Increment total number of votes by 1
     inc.addColumn(Bytes.toBytes("ratings"), Bytes.toBytes("num_votes"), 1)
 
+    // Increment jrockower_ratings_hbase table with new review
     table.increment(inc)
     return "Updated speed layer for review for " + kfr.film
   }
