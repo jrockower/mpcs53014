@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Review a film</title>
+  </head>
+  <body style="background-color:#d5e1df">
+    <p style="margin-bottom:2cm"/>
+    <h3 style="text-align:center;margin-top:10px">Review a Film</h3>
+    <form action="/review.html" style="width:270px;height:50px;margin:0 auto;background:#FFFFFF" method="get" class="form-control" autocomplete="off">
+        <div style="white-space: nowrap"><label>
+	<span class="myarrow">
+        <span>Film:</span>
+	<input list="films" name="film" placeholder="Enter film"/>
+          <datalist id="films">
+              {{#films}}
+              <option value="{{key}}">
+              {{/films}}
+          </datalist></span>
+            <br>
+            <br>
+        <span class="myarrow" style="margin-top:20px">
+        <span>Enter rating:</span>
+    <select class="form-control form-control" name="review">
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+        <option>6</option>
+        <option>7</option>
+        <option>8</option>
+        <option>9</option>
+        <option>10</option>
+    </select>
+        </label><button type="submit" class="btn btn-primary pull-right" style="margin-left:10px">Submit</button>
+        </div>
+    </form>
+
+    <p style="margin-bottom:2cm"/>
+
+  </body>
+</html>
