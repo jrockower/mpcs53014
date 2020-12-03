@@ -137,11 +137,23 @@ app.get('/films-review.html', function (req, res) {
 });
 
 app.get('/review.html', function (req, res) {
-	const film = req.query['film'];
-	const review = req.query['review'];
-	console.log(req.query)
-	console.log(film);
-	console.log(review);
+	var film_val = req.query['film'];
+	var review_val = req.query['review'];
 
-})
+	var report = {
+		film: film_val,
+		review: review_val
+	};
+
+	console.log(report)
+
+	kafkaProducer.send([{topic: 'jrockower-film-ratings', messages: JSON.stringify(report)}],
+		function(err, data) {
+			console.log("Kafka Error: " + err);
+			console.log(data);
+			console.log(report);
+			res.redirect('/films-review.html');
+		});
+
+});
 app.listen(port);
