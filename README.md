@@ -7,9 +7,10 @@ To make the scraping process shorter for the limited purpose of this project, I 
 
 # How to Use
 * The user is first asked to think of a film for which they are interested in seeing opening weekend box office information.
-* From `http://mpcs53014-loadbalancer-217964685.us-east-2.elb.amazonaws.com:3049/films-request.html` a user enters the name of a film using the dropdown menu.
+* From [films-request.html](http://mpcs53014-loadbalancer-217964685.us-east-2.elb.amazonaws.com:3049/films-request.html) a user enters the name of a film using the dropdown menu.
 * After submitting, a table is displayed including some basic information about each film for the top 10 in the opening weekend of the film submitted.
 * If the user is interested in looking up another film, they can either go back in their browser or click the "Enter another film" button in the upper-left hand corner of the page.
+* While running the spark job to capture reviews, a user can submit their review of a film from [films-review.html](http://mpcs53014-loadbalancer-217964685.us-east-2.elb.amazonaws.com:3049/films-review.html)
 
 # Step 1 - Ingest Data
 * [BoxOfficeMojo.py](./BoxOfficeMojo.py)
@@ -68,20 +69,6 @@ To make the scraping process shorter for the limited purpose of this project, I 
   * For `jrockower_box_office_hbase`, setting the key to a concatenated field of year/week/rank + 1000000. Because HBase sorts lexicographically, by making every rank the same number of digits, this allows a proper sort.
   * Setting total score and number of votes as binary to be incremented as part of the speed layer.
 
-* If need to recreate:
-hive:
-drop table jrockower_film_keys_hbase;
-drop table jrockower_box_office_hbase;
-drop table jrockower_ratings_hbase;
-
-hbase shell
-disable 'jrockower_film_keys_hbase'
-drop 'jrockower_film_keys_hbase'
-disable 'jrockower_box_office_hbase'
-drop 'jrockower_box_office_hbase'
-disable 'jrockower_ratings_hbase'
-drop 'jrockower_ratings_hbase'
-
 # Step 5 - Application
 * As stated at top, the application creates a page at `/films-request.html` to request a film for which one would like to view box office data.
 * app.js uses various mustache files to generate the request page and the output page.
@@ -98,4 +85,4 @@ drop 'jrockower_ratings_hbase'
   * Reads in the message queue and increments the `jrockower_ratings_hbase` number of votes and total score fields.
   * Then, as the application runs and one requests the box office information for a film, the most up to date average score is displayed.
 * To run the spark job:
-  * `spark-submit --master local[2] --driver-javaptions "-Dlog4j.configuration=file:///home/hadoop/ss.log4j.properties" --class StreamReviews uber-jrockower-speed-1.0-SNAPSHOT.jar b-1.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:9092,b-2.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:9092`
+  * `spark-submit --master local[2] --driver-java-options "-Dlog4j.configuration=file:///home/hadoop/ss.log4j.properties" --class StreamReviews uber-jrockower-speed-1.0-SNAPSHOT.jar b-1.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:9092,b-2.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:9092`
