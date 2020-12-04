@@ -12,6 +12,7 @@ const mustache = require('mustache');
 const filesystem = require('fs');
 const port = Number(process.argv[2]);
 
+// Connect to hbase
 const hbase = require('hbase')
 var hclient = hbase({ host: process.argv[3], port: Number(process.argv[4])})
 
@@ -28,6 +29,7 @@ app.get('/films-request.html', function (req, res) {
 	})
 });
 
+// Adapted from Professor Spertus code to remove prefix to scan through hbase
 function removePrefix(text, prefix) {
 	if(text.indexOf(prefix) != 0) {
 		throw "missing prefix"
@@ -39,6 +41,7 @@ function counterToNumber(c) {
 	return Number(Buffer.from(c).readBigInt64BE());
 }
 
+// Page to output top 10 box office for opening week of film submitted by user
 app.get('/films-request-output.html', function (req, res) {
 	const film = req.query['film'];
 	console.log(film);
@@ -69,6 +72,7 @@ app.get('/films-request-output.html', function (req, res) {
 			var all_directors = director1
 		}
 
+		// Update result with the writers and directors
 		result['writers'] = all_writers
 		result['directors'] = all_directors
 
@@ -76,6 +80,7 @@ app.get('/films-request-output.html', function (req, res) {
 	}
 
 	function filminfo(cells) {
+		// Wrapper to process film records for each cell passed in
 		var result = [];
 		var filmRecord;
 		cells.forEach(function (cell) {
@@ -88,12 +93,17 @@ app.get('/films-request-output.html', function (req, res) {
 			}
 			filmRecord[removePrefix(cell['column'],'films:')] = cell['$']
 		})
+		// Push processed record to result
 		result.push(processfilmRecord(filmRecord))
 		return result;
 
 	}
 
 	function getvotes(filminfo, result, position, week_formatted) {
+		// Main function to get the ratings from jrockower_ratings_hbase and then pass this output to html to render
+		// Did this recursively to handle the lack of ability to pass information out of calls to hbase
+
+		// Base case - when done processing film info, then render to html
 		if (position > filminfo.length - 1 ) {
 			console.log(result)
 			var template = filesystem.readFileSync("films-output.mustache").toString();
@@ -103,26 +113,36 @@ app.get('/films-request-output.html', function (req, res) {
 				week: week_formatted
 			});
 			res.send(html)
+		// Recursive step
 		} else {
+			// First populate result with everything from filminfo of that position
 			result[position] = filminfo[position]
+			// Then, access hbase using title and start year
 			hclient.table('jrockower_ratings_hbase').row(filminfo[position]['title'] + ' (' + filminfo[position]['startyear'] + ')').get((error, value) => {
 				// NOTE TO GRADER: The counter values seem to be slightly off from querying the HBase table in the shell. According to Piazza, seems to be a conversion error that we shouldn't fix https://piazza.com/class/kfkdziuxddb44n?cid=449
+
+				// Take total score divided by number of votes to get average rating and round result
 				result[position]['avg_rating'] = (counterToNumber(value[1]['$']) / counterToNumber(value[0]['$'])).toFixed(1)
+				// Get the number of votes to present in table
 				result[position]['num_votes'] = parseFloat(counterToNumber(value[0]['$']).toString()).toLocaleString('en')
+				// Recursively increment position by 1 to take a look at next record
 				getvotes(filminfo, result, position + 1, week_formatted);
 			})
 		}
 	}
 
+	//
 	hclient.table('jrockower_film_keys_hbase').row(film).get((error, value) => {
 		const week = value[0]['$']
 		const week_formatted = week.substr(0, 4) + ' Week ' + week.substr(week.length - 2, 2)
 
 		hclient.table('jrockower_box_office_hbase').scan(
 			{filter: {type: "PrefixFilter", value: week}, maxVersions: 1}, (err, cells) => {
+				// Get all films for a given week
 				var fi = filminfo(cells, week);
 				var result = []
 				var position = 0
+				// Get the votes and send to HTML
 				getvotes(fi, result, position, week_formatted)
 			});
 	});
@@ -134,6 +154,7 @@ var Producer = kafka.Producer;
 var kafkaClient = new kafka.KafkaClient({kafkaHost: process.argv[5]});
 var kafkaProducer = new Producer(kafkaClient);
 
+// Creates form for which one can enter a film and submit a review
 app.get('/films-review.html', function (req, res) {
 	hclient.table('jrockower_film_keys_hbase').scan({ maxVersions: 1}, (err,rows) => {
 		var template = filesystem.readFileSync("review.mustache").toString();
@@ -144,6 +165,7 @@ app.get('/films-review.html', function (req, res) {
 	})
 });
 
+// Get the film and review and then send to Kafka
 app.get('/review.html', function (req, res) {
 	var film_val = req.query['film'];
 	var review_val = req.query['review'];
