@@ -30,7 +30,3 @@ CREATE TABLE jrockower_weekly_box_office (rank BIGINT, last_week STRING, filmid 
 insert overwrite table jrockower_weekly_box_office select rank, last_week, filmid, title, gross, change_lastweek, theaters, thtr_chg,
 thtr_avg, gross,
 weeks, distributor, yr_week from jrockower_wk_box_office;
-
-
-
-
