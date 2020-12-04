@@ -11,6 +11,7 @@ To make the scraping process shorter for the limited purpose of this project, I 
 * After submitting, a table is displayed including some basic information about each film for the top 10 in the opening weekend of the film submitted.
 * If the user is interested in looking up another film, they can either go back in their browser or click the "Enter another film" button in the upper-left hand corner of the page.
 * While running the spark job to capture reviews, a user can submit their review of a film from [films-review.html](http://mpcs53014-loadbalancer-217964685.us-east-2.elb.amazonaws.com:3049/films-review.html)
+  * `spark-submit --master local[2] --driver-java-options "-Dlog4j.configuration=file:///home/hadoop/ss.log4j.properties" --class StreamReviews uber-jrockower-speed-1.0-SNAPSHOT.jar b-1.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:9092,b-2.mpcs53014-kafka.fwx2ly.c4.kafka.us-east-2.amazonaws.com:9092`
 
 # Step 1 - Ingest Data
 * [BoxOfficeMojo.py](./BoxOfficeMojo.py)
